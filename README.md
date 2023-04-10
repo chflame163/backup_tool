@@ -24,4 +24,10 @@ This program can be package to an executable file through pyinstaller,
 on windows, will package to a .exe file, and on MacOS, package to a .app file.
 
 ## Release Note:
-Version 1.0.0 only supports Simplified Chinese interface.
+Version 1.0.1
+Multi language support English and Simplified Chinese.
+Fix Compressed file permission issue, will be show a message warning.
+UI optimize.
+
+Version 1.0.0 
+Only supports Simplified Chinese interface.
