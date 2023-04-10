@@ -1,6 +1,6 @@
 # 可以跨模块跨线程使用的全局变量
 # 在模块头部导入
-# from globalDict import GlobalDict
+# from global_dict import GlobalDict
 # 在任何地方使用下列方式访问
 # GlobalDict.get("keyname")获取变量，如果keyname不存在则返回False
 # GlobalDict.set("keyname",value)设置变量

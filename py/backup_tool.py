@@ -1,15 +1,18 @@
 import sys
 import os
 import shutil
+import threading
 import time
 import datetime
 import zipfile
 import logging
+import gettext
+import locale
 from PyQt5 import Qt, QtCore
 from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QMessageBox, QMenu
 from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont
 # 导入项目内模块
-import ui_backing, ui_finish, ui_editlist
+import ui_backing, ui_finish, ui_editlist, ui_msgbox_yn, ui_msgbox
 from bks_file_opration import *
 from global_dict import GlobalDict
 
@@ -30,7 +33,6 @@ class Logger:
     console.setLevel(logging.INFO)
     logger.addHandler(console)
 
-
 # 保存设置变量
 class Setting:
 
@@ -44,6 +46,7 @@ class Setting:
     __data:dict = {}
     # logger
     logger = Logger.logger
+    # set multi language translator
 
     def __init__(self):
         self.init_setting()
@@ -112,6 +115,170 @@ class Setting:
         ret_list.append(tuple(l_list))
         return ret_list
 
+    # 设置多语言
+    if sys.platform == "win32":
+        # 资源文件目录访问
+        def source_path(relative_path):
+            if getattr(sys, 'frozen', False):
+                base_path = sys._MEIPASS
+            else:
+                base_path = os.path.abspath(".")
+            return os.path.join(base_path, relative_path)
+
+        # 修改当前工作目录，使得资源文件可以被正确访问
+        cd = source_path('')
+        os.chdir(cd)
+        lang_dir = "Resources/locales"
+        local_lang = locale.getdefaultlocale()[0]
+    else:
+        lang_dir = os.path.join(os.path.join(os.path.dirname(os.path.dirname(sys.argv[0])),
+                                             "Resources"), "locales")
+        hex_encoding = os.environ.get('__CF_USER_TEXT_ENCODING').split(":")[1]
+        if int(hex_encoding, base=16) == 25:
+            local_lang = "zh_CN"
+        else:
+            local_lang = "Other"
+
+    if local_lang == "zh_CN":
+        translator = gettext.translation("multi_language", localedir=lang_dir, languages=['zh_CN'])
+    else:
+        translator = gettext.translation("multi_language", localedir=lang_dir, languages=['en_US'])
+
+    translator.install("multi_language")
+    _ = translator.gettext
+
+    # 临时函数
+    # def _(string):
+    #     return string
+
+
+# 弹窗，两个按钮
+class TowButtonMessageBoxWidget(ui_msgbox_yn.Ui_Form, QWidget):
+
+    yes_signal = pyqtSignal(bool)
+
+    # 设置按钮
+    def setup_action(self):
+        # 设置阻塞
+        self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+        # 设置窗口无标题栏，透明，置顶
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint, True)
+        self.btn_yes.setText(Setting._("Yes"))
+        self.btn_no.setText(Setting._("No"))
+        self.lab_message.setWordWrap(True)
+        # Mac版UI调整
+        if not sys.platform == "win32":
+            title_font = QFont()
+            title_font.setFamily("Microsoft YaHei")
+            title_font.setPointSize(16)
+            self.lab_title.setFont(title_font)
+            font = QFont()
+            font.setFamily("Microsoft YaHei")
+            font.setPointSize(13)
+            self.lab_message.setFont(font)
+            self.btn_yes.setFont(font)
+            self.btn_no.setFont(font)
+        # 设置按钮
+        self.btn_yes.clicked.connect(lambda : self.yes_clicked())
+        self.btn_no.clicked.connect(lambda : self.no_clicked())
+        self.btn_close.clicked.connect(lambda : self.no_clicked())
+
+
+    # 拖动窗口鼠标按下事件
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            try:
+                super(TowButtonMessageBoxWidget, self).mousePressEvent(event)
+                self.start_x = event.x()
+                self.start_y = event.y()
+            except:
+                pass
+
+    # 拖动窗口鼠标弹起事件
+    def mouseReleaseEvent(self, event):
+        self.start_x = None
+        self.start_y = None
+
+    # 拖动窗口鼠标按住拖动事件
+    def mouseMoveEvent(self, event):
+        super(TowButtonMessageBoxWidget, self).mouseMoveEvent(event)
+        try:
+            dis_x = event.x() - self.start_x
+            dis_y = event.y() - self.start_y
+            self.move(self.x() + dis_x, self.y() + dis_y)
+        except:
+            pass
+
+    def yes_clicked(self):
+        self.yes_signal.emit(True)
+        self.close()
+
+    def no_clicked(self):
+        self.yes_signal.emit(False)
+        self.close()
+
+# 弹窗，一个按钮
+class OneButtonMessageBoxWidget(ui_msgbox.Ui_Form, QWidget):
+
+    ok_signal = pyqtSignal(bool)
+
+    # 设置按钮
+    def setup_action(self):
+        # 设置阻塞
+        self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+        # 设置窗口无标题栏，透明，置顶
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint, True)
+        self.btn_ok.setText(Setting._("OK"))
+        self.lab_message.setWordWrap(True)
+        # Mac版UI调整
+        if not sys.platform == "win32":
+            title_font = QFont()
+            title_font.setFamily("Microsoft YaHei")
+            title_font.setPointSize(16)
+            self.lab_title.setFont(title_font)
+            font = QFont()
+            font.setFamily("Microsoft YaHei")
+            font.setPointSize(13)
+            self.lab_message.setFont(font)
+            self.btn_ok.setFont(font)
+        # 设置按钮
+        self.btn_ok.clicked.connect(lambda : self.ok_clicked())
+        self.btn_close.clicked.connect(lambda : self.ok_clicked())
+
+
+    # 拖动窗口鼠标按下事件
+    def mousePressEvent(self, event):
+        if event.button() == QtCore.Qt.LeftButton:
+            try:
+                super(OneButtonMessageBoxWidget, self).mousePressEvent(event)
+                self.start_x = event.x()
+                self.start_y = event.y()
+            except:
+                pass
+
+    # 拖动窗口鼠标弹起事件
+    def mouseReleaseEvent(self, event):
+        self.start_x = None
+        self.start_y = None
+
+    # 拖动窗口鼠标按住拖动事件
+    def mouseMoveEvent(self, event):
+        super(OneButtonMessageBoxWidget, self).mouseMoveEvent(event)
+        try:
+            dis_x = event.x() - self.start_x
+            dis_y = event.y() - self.start_y
+            self.move(self.x() + dis_x, self.y() + dis_y)
+        except:
+            pass
+
+    def ok_clicked(self):
+        self.ok_signal.emit(True)
+        self.close()
+
 
 # 新建备份/管理备份的GUI部件与业务逻辑
 class EditListWidget(ui_editlist.Ui_Form, QWidget):
@@ -119,8 +286,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
     min_window_width:int = 500
     min_window_height:int = 235
     # 根据窗口宽度计算列宽偏移量
-    column_width_offset:int = 184
-
+    column_width_offset:int = 174
     # 采集拖放文件名的临时变量
     tmp_dorp_filename:list = []
 
@@ -130,12 +296,20 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.resize(560, 316)
+        self.btn_clear_file.setText(Setting._("Clear List"))
+        self.btn_set_target.setText(Setting._("Backup To"))
+        self.btn_start_backup.setText(Setting._("Start Backup"))
+        # self.lab_path_name.setWordWrap(True)
+
         if not sys.platform == "win32":
             font = QFont()
             font.setFamily("Microsoft YaHei")
-            font.setPointSize(12)
+            font.setPointSize(13)
             self.lab_path_name.setFont(font)
             self.tableView.setFont(font)
+            self.btn_start_backup.setFont(font)
+            self.btn_set_target.setFont(font)
+            self.btn_clear_file.setFont(font)
             self.close_frame_verticalLayout.setContentsMargins(26, 6, 16, 30)
             self.btns_verticalLayout.setContentsMargins(20, -1, 10, -1)
 
@@ -148,9 +322,9 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         self.renovate_info()
         # 设置窗口title
         if SETTING.Data:
-            self.setWindowTitle("上次备份了以下文件")
+            self.setWindowTitle(Setting._("The following files were backed up last time"))
         else:
-            self.setWindowTitle("请选择目的文件夹和要备份的文件")
+            self.setWindowTitle(Setting._("Choose the backup Destination Folder"))
         # 设置按钮点击事件
         self.btn_start_backup.clicked.connect(lambda : self.start_clicked())
         self.btn_set_target.clicked.connect(lambda : self.set_target_clicked())
@@ -168,9 +342,9 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             SETTING.Data = s.Data
             SETTING.Target = s.Target
             SETTING.Lastdir = s.Lastdir
-            SETTING.logger.info("已读取设置文件")
+            SETTING.logger.info("Setting file loaded success.")
         else:
-            SETTING.logger.info("读取设置失败")
+            SETTING.logger.info("Can not read setting file.")
 
     # QWidget关闭事件，清除所有窗口实例，退出到系统
     def closeEvent(self, event):
@@ -188,21 +362,24 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         # 获取鼠标点击坐标
         self.mouse_x = event.globalX()
         self.mouse_y = event.globalY()
-        # 如果按住右下角
-        if self.childAt(event.x(), event.y()) in [self.conner_frame]:
-            self.drag_event = 1
-        # 如果按住右边框
-        elif self.childAt(event.x(), event.y()) in [self.right_side_frame]:
-            self.drag_event = 2
-        # 如果按住下边框
-        elif self.childAt(event.x(), event.y()) in [self.bottom_side_frame]:
-            self.drag_event = 3
-        # 只移动不调整大小
-        else:
-            self.drag_event = 0
-            super(EditListWidget, self).mousePressEvent(event)
-            self.start_x = event.x()
-            self.start_y = event.y()
+        try:
+            # 如果按住右下角
+            if self.childAt(event.x(), event.y()) in [self.conner_frame]:
+                self.drag_event = 1
+            # 如果按住右边框
+            elif self.childAt(event.x(), event.y()) in [self.right_side_frame]:
+                self.drag_event = 2
+            # 如果按住下边框
+            elif self.childAt(event.x(), event.y()) in [self.bottom_side_frame]:
+                self.drag_event = 3
+            # 只移动不调整大小
+            else:
+                self.drag_event = 0
+                super(EditListWidget, self).mousePressEvent(event)
+                self.start_x = event.x()
+                self.start_y = event.y()
+        except:
+            pass
 
 
     # 鼠标弹起事件
@@ -218,45 +395,48 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
 
     # 鼠标按住拖动事件
     def mouseMoveEvent(self, event):
-        # 只移动
-        if self.drag_event == 0:
-            super(EditListWidget, self).mouseMoveEvent(event)
-            dis_x = event.x() - self.start_x
-            dis_y = event.y() - self.start_y
-            self.move(self.x() + dis_x, self.y() + dis_y)
-        # 调整宽和高
-        elif self.drag_event == 1:
-            if event.x() < self.min_window_width:
-                x = self.min_window_width
-            else:
-                x = event.x()
-            if event.y() < self.min_window_height:
-                y = self.min_window_height
-            else:
-                y = event.y()
-            self.setGeometry(self.origin_x, self.origin_y, x, y)
-            self.frame.setGeometry(0, 0, x, y)
-            # 调整列宽
-            self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
+        try:
+            # 只移动
+            if self.drag_event == 0:
+                super(EditListWidget, self).mouseMoveEvent(event)
+                dis_x = event.x() - self.start_x
+                dis_y = event.y() - self.start_y
+                self.move(self.x() + dis_x, self.y() + dis_y)
+            # 调整宽和高
+            elif self.drag_event == 1:
+                if event.x() < self.min_window_width:
+                    x = self.min_window_width
+                else:
+                    x = event.x()
+                if event.y() < self.min_window_height:
+                    y = self.min_window_height
+                else:
+                    y = event.y()
+                self.setGeometry(self.origin_x, self.origin_y, x, y)
+                self.frame.setGeometry(0, 0, x, y)
+                # 调整列宽
+                self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
 
-        # 只调整宽
-        elif self.drag_event == 2:
-            if event.x() < self.min_window_width:
-                x = self.min_window_width
-            else:
-                x = event.x()
-            self.setGeometry(self.origin_x, self.origin_y, x, self.height())
-            self.frame.setGeometry(0, 0, x, self.frame.height())
-            # 调整列宽
-            self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
-        # 只调整高
-        elif self.drag_event == 3:
-            if event.y() < self.min_window_height:
-                y = self.min_window_height
-            else:
-                y = event.y()
-            self.setGeometry(self.origin_x, self.origin_y, self.width(), y)
-            self.frame.setGeometry(0, 0, self.frame.width(), y)
+            # 只调整宽
+            elif self.drag_event == 2:
+                if event.x() < self.min_window_width:
+                    x = self.min_window_width
+                else:
+                    x = event.x()
+                self.setGeometry(self.origin_x, self.origin_y, x, self.height())
+                self.frame.setGeometry(0, 0, x, self.frame.height())
+                # 调整列宽
+                self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
+            # 只调整高
+            elif self.drag_event == 3:
+                if event.y() < self.min_window_height:
+                    y = self.min_window_height
+                else:
+                    y = event.y()
+                self.setGeometry(self.origin_x, self.origin_y, self.width(), y)
+                self.frame.setGeometry(0, 0, self.frame.width(), y)
+        except:
+            pass
 
 
     # 获取tableView中的选中项目
@@ -271,7 +451,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             if tmp_list:
                 # 两个值为一组元组，转为字典
                 ret_dict = dict(SETTING.linear_to_matrix(tmp_list, 2))
-                SETTING.logger.info(f"选中 {ret_dict}")
+                SETTING.logger.info("Seleted: " + str(ret_dict))
                 return ret_dict
 
         else:
@@ -300,7 +480,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
                         item = item + "*.*"
                 # 添加文件名到列表
                 SETTING.Data.update({item:""})
-                SETTING.logger.info(f"拖放添加 {item}")
+                SETTING.logger.info("Drag add: " + item)
             self.tmp_dorp_filename = []
             self.renovate_info()
 
@@ -316,17 +496,17 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         screenPos = self.tableView.mapToGlobal(point)
         # 如果仅有一个选择项
         if len(selected_items)==1:
-            if "压缩" in selected_items.values():
-                del_items = r_menu.addAction("移除")
-                uncomprs_item = r_menu.addAction("取消压缩")
+            if Setting._("Compress") in selected_items.values():
+                del_items = r_menu.addAction(Setting._("Remove from List"))
+                uncomprs_item = r_menu.addAction(Setting._("Unset <Compress>"))
                 click = r_menu.exec_(screenPos)
                 if click == uncomprs_item:
                     self.set_item_uncompress(list(selected_items.keys()))
                 elif click == del_items:
                     self.del_items(selected_items)
             else:
-                del_items = r_menu.addAction("移除")
-                comprs_item = r_menu.addAction("备份时压缩")
+                del_items = r_menu.addAction(Setting._("Remove from List"))
+                comprs_item = r_menu.addAction(Setting._("Set <Compress> when backup"))
                 click = r_menu.exec_(screenPos)
                 if click == comprs_item:
                     self.set_item_compress(list(selected_items.keys()))
@@ -334,11 +514,11 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
                     self.del_items(selected_items)
         # 如果有多个选择项
         elif len(selected_items) > 1:
-            del_items = r_menu.addAction("移除选中项")
+            del_items = r_menu.addAction(Setting._("Remove selected from List"))
             if "" in list(selected_items.values()):
-                compress_items = r_menu.addAction("备份时压缩选中项")
+                compress_items = r_menu.addAction(Setting._("Set selected <Compress> when backup"))
             if "压缩" in list(selected_items.values()):
-                uncompress_items = r_menu.addAction("取消选中项压缩")
+                uncompress_items = r_menu.addAction(Setting._("Selected unset <Compress>"))
             click = r_menu.exec_(screenPos)
             if click == del_items:
                 self.del_items(selected_items)
@@ -358,24 +538,25 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         if SETTING.Data and SETTING.Target:
             # 保存设置
             save_setting(SETTING)
-            SETTING.logger.info("已保存设置")
+            SETTING.logger.info("Setting saved success.")
             self.close()
-            SETTING.logger.info("开始备份")
+            SETTING.logger.info("Starting backup.")
             backing_window.show_backing()
         else:
-            self.show_message("请先设置目的文件夹以及备份文件")
+            self.show_message(Setting._("Please set the Destination Folder and Drag the backup files first."))
 
     # close按钮点击事件
     def close_clicked(self):
-        SETTING.logger.info("关闭窗口")
+        SETTING.logger.info("Close window.")
         self.close()
         ExitProgram.exit(0)
 
     # 选择目的文件夹对话框
     def set_target_clicked(self):
-        dir_name = QFileDialog.getExistingDirectory(self, "请选择备份目的文件夹", os.path.expanduser("~/"))
+        dir_name = QFileDialog.getExistingDirectory(self, Setting._("Choose the backup Destination Folder"),
+                                                    os.path.expanduser("~/"))
         if dir_name:
-            SETTING.logger.info(f"设置备份目的文件夹 {dir_name}")
+            SETTING.logger.info("Set Destination Folder to: " + dir_name)
             SETTING.Target = dir_name
         self.renovate_info()
 
@@ -383,16 +564,16 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
     def set_item_compress(self,items:list):
         for i in items:
             if SETTING.Data[i] == "":
-                SETTING.Data[i] = "压缩"
-                SETTING.logger.info(f"{i} 设置为<压缩>")
+                SETTING.Data[i] = Setting._("Compress")
+                SETTING.logger.info(i + " Set to <Compress>")
         self.renovate_info()
 
     # 取消压缩状态
     def set_item_uncompress(self,items:list):
         for i in items:
-            if SETTING.Data[i] == "压缩":
+            if SETTING.Data[i] == Setting._("Compress"):
                 SETTING.Data[i] = ""
-                SETTING.logger.info(f"{i} 取消<压缩>")
+                SETTING.logger.info(i + " Unset <Compress>")
         self.renovate_info()
 
     # 清除选中的项目
@@ -410,33 +591,33 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
                 list_str = list_str + "\n'" + tmp_str + "/*.*'"
             del_list.append(i)
         # 显示移除文件弹窗
-        if self.show_message("确定把以下文件/文件夹从列表移除吗？"+list_str, delitem = items):
-            self.del_from_list(del_list)
+        self.show_del_message(list_str, delitem = items)
+
 
     # 清空列表按钮点击事件
     def clear_file_clicked(self):
-        SETTING.logger.info("从列表清除所有文件")
+        SETTING.logger.info("Clear all files from List.")
         SETTING.Data = {}
         self.renovate_info()
 
     # 从列表中去除文件
     def del_from_list(self, del_list:list):
         for i in del_list:
-            SETTING.logger.info(f"{SETTING.Data[i]} 从列表中移除")
+            SETTING.logger.info(i + " Removed from List.")
             del SETTING.Data[i]
         self.renovate_info()
 
     # 刷新显示信息
     def renovate_info(self):
 
-        help_dict = {"点击上方「备份到」按钮，选择备份目的文件夹，":"",
-                    "然后把要备份的文件/文件夹拖到这里。":"",
-                    "选中一个或多个条目，点击鼠标右键，有更多选项，":"",
-                    "可以设置是否压缩，以及是否从列表移除。":"",
-                    "设置完毕后，点「开始备份」按钮，":"",
-                    "将在备份目的文件夹下建立新的备份文件夹，以当前时间命名。":"",
-                     "只要备份过一次，后面都会记住列表的内容设置。": "",
-                    "--> 开始吧！":"",
+        help_dict = {Setting._("Click the 'Backup to' button above and select the backup Destination Folder,"): "",
+                     Setting._("then drag the Files/Folders to be backed up here."): "",
+                     Setting._("Select one or more entries, right-click, for more options,"): "",
+                     Setting._("you can set <Compress> or Remove selected from the List."): "",
+                     Setting._("After setting up, click the 'Start Backup' button,"): "",
+                     Setting._("a folder will be created in Destination Folder, named by current time."): "",
+                     Setting._("When backed up once time, all of settings will be remembered later."): "",
+                     "--> " + Setting._("Let's Go!"):"",
                      }
 
         # 如果全部SETTING是空的，表示首次运行，显示帮助信息
@@ -445,27 +626,41 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             self.f_model = SETTING.dict_to_data(help_dict,self.f_model)
         else:
             self.f_model = SETTING.dict_to_data(SETTING.Data,self.f_model)
-        self.lab_path_name.setText("   " + SETTING.Target)
+        self.lab_path_name.setText("  " + SETTING.Target)
         self.tableView.verticalHeader().setVisible(False)
         self.tableView.horizontalHeader().setVisible(False)
         # 调整列宽
         self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
-        self.tableView.setColumnWidth(1, 60)
+        self.tableView.setColumnWidth(1, 32)
 
 
     # 弹窗消息框
-    def show_message(self, msg:str, delitem:dict = {}) -> bool:
-        # 如果带参数
-        if delitem:
-            msg_box = QMessageBox.warning(self, "警告", msg,
-                                          QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            # 如果点yes，返回True将执行后续操作
-            if msg_box==QMessageBox.Yes:
-                return True
-        # 不带参数，弹出普通消息框，返回False
-        else:
-            QMessageBox.warning(self, "警告", msg, QMessageBox.Ok)
-            return False
+    def show_message(self, msg:str):
+        def button_clicked(ok_is_click):
+            if ok_is_click:
+                self.msgbox.close()
+        self.msgbox = OneButtonMessageBoxWidget()
+        self.msgbox.setupUi(self.msgbox)
+        self.msgbox.setup_action()
+        self.msgbox.ok_signal.connect(button_clicked)
+        self.msgbox.lab_title.setText(Setting._("Warning!"))
+        self.msgbox.lab_message.setText(msg)
+        self.msgbox.show()
+
+    # 去除选择项弹窗消息框
+    def show_del_message(self, msg:str, delitem:dict) -> bool:
+        def button_clicked(yes_is_click):
+            if yes_is_click:
+                self.del_from_list(delitem)
+            else:
+                self.msgbox.close()
+        self.msgbox = TowButtonMessageBoxWidget()
+        self.msgbox.setupUi(self.msgbox)
+        self.msgbox.setup_action()
+        self.msgbox.yes_signal.connect(button_clicked)
+        self.msgbox.lab_title.setText(Setting._("Remove this File/Folder from List?"))
+        self.msgbox.lab_message.setText(msg)
+        self.msgbox.show()
 
 
 # 进度条窗口的GUI部件与业务逻辑
@@ -483,7 +678,8 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
     progressbar_rate:int = 1
     # 进度条阈值
     progressbar_threshold:int = 1
-
+    # 弹窗退出的错误标识，避免重复弹窗
+    EXIT_ERR = False
 
     # 设置界面
     def setup_action(self):
@@ -491,19 +687,22 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint, True)
+        self.btn_cancel.setText(Setting._("Cancel"))
+        self.setWindowTitle(Setting._("Backing Up"))
         # 非Windows版UI调整
         if not sys.platform == "win32":
             font = QFont()
             font.setFamily("Microsoft YaHei")
-            font.setPointSize(12)
+            font.setPointSize(13)
             self.label.setFont(font)
+            self.btn_cancel.setFont(font)
         # 设置按钮事件
         self.btn_cancel.clicked.connect(lambda : self.cancel_clicked())
         # 设置本次备份的子文件夹名
         time_stamp = datetime.datetime.now().strftime("%Y")
-        time_stamp = time_stamp + "年" + datetime.datetime.now().strftime("%m")
-        time_stamp = time_stamp + "月" + datetime.datetime.now().strftime("%d")
-        time_stamp = time_stamp + "日" + datetime.datetime.now().strftime("%H.%M.%S")
+        time_stamp = time_stamp + Setting._("<year>") + datetime.datetime.now().strftime("%m")
+        time_stamp = time_stamp + Setting._("<month>") + datetime.datetime.now().strftime("%d")
+        time_stamp = time_stamp + Setting._("<day>") + datetime.datetime.now().strftime("%H.%M.%S")
         SETTING.Timestamp = time_stamp
         self.backup_dest_path = SETTING.Target + "/Backup@" + SETTING.Timestamp
 
@@ -517,22 +716,29 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
                 check_files_err.append(item)
         if check_files_err:
             err_msg = "\n".join(check_files_err)
-            err_msg = "找不到" + err_msg
-            SETTING.logger.error(err_msg)
+            err_msg = Setting._("Can't find") + " " + err_msg
+            SETTING.logger.error("Can't find " + err_msg)
             self.exit_show_message(err_msg)
+            return
         if sys.platform == "win32":
             dst_drive, _ = os.path.splitdrive(self.backup_dest_path)
         else:
             dst_drive = SETTING.Target
         if os.path.isdir(dst_drive):
             try:
+                SETTING.logger.info("Make Destination Folder: " + self.backup_dest_path)
                 os.mkdir(self.backup_dest_path)
             except OSError as e:
                 SETTING.logger.error(e)
-                self.exit_show_message("目标磁盘创建文件夹失败，请检查用户权限")
+                self.exit_show_message(Setting._(
+                    "Failed to create Destination Folder, Permission denied.") + "\n" +
+                    Setting._("Choose another Destination Folder."))
+                return
         else:
-            SETTING.logger.error(f"找不到磁盘{dst_drive}")
-            self.exit_show_message(f"找不到磁盘{dst_drive}")
+            msg = Setting._("Can't find disk") + " " + dst_drive
+            SETTING.logger.error("Can't find disk " + dst_drive)
+            self.exit_show_message(msg)
+            return
 
         # 分拣文件得到待拷贝文件表，待压缩文件放在self.zip_file_list
         to_copy_filelist = self.sortout_filelist()
@@ -568,11 +774,14 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
                     freespaceMB = stat.f_bavail * stat.f_frsize / 1024 / 1024
                 # 如果剩余空间不足100MB
                 if (freespaceMB - needsizeMB) < 100:
-                    self.exit_show_message(f"{dst_drive}磁盘空间不足，无法压缩文件。")
-                    SETTING.logger.error(f"{dst_drive}磁盘空间不足，无法压缩文件。")
+                    msg = dst_drive + " " + Setting._("is insufficient disk space to compress.")
+                    self.exit_show_message(msg)
+                    SETTING.logger.error(dst_drive + " is insufficient disk space to compress.")
+                    return
             except Exception as e:
-                self.exit_show_message(f"{dst_drive}磁盘错误")
+                self.exit_show_message(dst_drive + Setting._("Disk error!"))
                 SETTING.logger.error(e)
+                return
         # 设置复制文件线程
         self.backing_up_files = BackingUpFiles()
         # 设置信号槽
@@ -582,14 +791,16 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
         self.backing_up_files.copy_err_signal.connect(self.copy_error)
         # 传参数
         self.backing_up_files.to_copy_list = to_copy_filelist
+        # 设置压缩文件线程
+        self.zip_files = ZipFiles()
+        # 设置信号槽
+        self.zip_files.zipping_signal.connect(self.set_zip_text)
+        self.zip_files.ziprate_signal.connect(self.set_zip_progress)
+        self.zip_files.zipfinish_signal.connect(self.zip_finish_and_start_copy)
+        self.zip_files.ziperr_signal.connect(self.zip_err)
+
         # 如果有压缩任务
         if self.zip_file_list:
-            # 设置压缩文件线程
-            self.zip_files = ZipFiles()
-            # 设置信号槽
-            self.zip_files.zipping_signal.connect(self.set_zip_text)
-            self.zip_files.ziprate_signal.connect(self.set_zip_progress)
-            self.zip_files.zipfinish_signal.connect(self.zip_finish_and_start_copy)
             # 传参数
             self.zip_files.zip_file_list = self.zip_file_list
             self.zip_files.zip_tmpfile_suffix = self.zip_tmpfile_suffix
@@ -601,13 +812,15 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
         # 设置timer，显示压缩进度条用
         self.rate_timer = QtCore.QBasicTimer()
 
-
     # 拖动窗口鼠标按下事件
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            super(BackingWidget, self).mousePressEvent(event)
-            self.start_x = event.x()
-            self.start_y = event.y()
+            try:
+                super(BackingWidget, self).mousePressEvent(event)
+                self.start_x = event.x()
+                self.start_y = event.y()
+            except:
+                pass
 
     # 拖动窗口鼠标弹起事件
     def mouseReleaseEvent(self, event):
@@ -617,9 +830,12 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
     # 拖动窗口鼠标按住拖动事件
     def mouseMoveEvent(self, event):
         super(BackingWidget, self).mouseMoveEvent(event)
-        dis_x = event.x() - self.start_x
-        dis_y = event.y() - self.start_y
-        self.move(self.x() + dis_x, self.y() + dis_y)
+        try:
+            dis_x = event.x() - self.start_x
+            dis_y = event.y() - self.start_y
+            self.move(self.x() + dis_x, self.y() + dis_y)
+        except:
+            pass
 
     # QThread入口
     def run(self):
@@ -627,6 +843,8 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
 
     # 压缩完毕信号槽接收函数
     def zip_finish_and_start_copy(self, ziped_file_list:list):
+        SETTING.logger.info("Compress completed.")
+        SETTING.logger.info("Zip files is " + str(ziped_file_list))
         self.rate_timer.stop()
         # 信号槽接收到的zip文件列表保存到本地
         self.src_zip_tmp_files = ziped_file_list
@@ -641,15 +859,16 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
         to_copy_list = list(SETTING.Data.keys())
         for item in to_copy_list:
             # 如果是压缩tag
-            if SETTING.Data[item] == "压缩":
+            if SETTING.Data[item] == Setting._("Compress"):
                 if item.endswith("*.*"):
                     parent_path = os.path.dirname(item)
                     # 文件夹添加到zip表
                     self.zip_file_list.append(parent_path)
                     tmp_zip_filename = [parent_path + self.zip_tmpfile_suffix]
                     if not os.path.isdir(parent_path):
-                        msg = f"找不到{parent_path}文件夹，请检查是否存在。"
+                        msg = Setting._("Can't find") + " " + parent_path + " " + Setting._("folder, Please check it!")
                         self.exit_show_message(msg)
+                        break
                     # 如果位于C盘根目录，添加zip临时文件夹路径
                     elif is_root(parent_path):
                         tmp_zip_filename = [add_tmp_path(tmp_zip_filename[0])]
@@ -659,8 +878,9 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
                     tmp_zip_filename = [item + self.zip_tmpfile_suffix]
 
                     if not os.path.isfile(item):
-                        msg = f"找不到{item}，请检查文件是否存在。"
+                        msg = Setting._("Can't find") + " " + item + Setting._(", Please check the file!")
                         self.exit_show_message(msg)
+                        break
                     # 如果位于C盘根目录，添加zip临时文件夹路径
                     elif is_root(item):
                         tmp_zip_filename = [add_tmp_path(tmp_zip_filename[0])]
@@ -690,18 +910,19 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
                         to_copy_list = front_half + in_dir_files + lower_half
                     else:
                         # 弹窗，显示找不到文件夹，退出
-                        msg = f"找不到{parent_path}文件夹，请检查是否存在。"
+                        msg = Setting._("Can't find") + " " + parent_path + " " + Setting._("folder, Please check it!")
                         self.exit_show_message(msg)
                 else:
                     # 弹窗，显示找不到文件，退出
-                    msg = f"找不到{item}，请检查文件是否存在。"
+                    msg = Setting._("Can't find") + " " + item + Setting._(", Please check the file!")
                     self.exit_show_message(msg)
         return  to_copy_list
 
     # 设置进度条的文字
     def set_label_text(self, filename:str):
-        self.label.setText("正在备份 " + filename)
-        SETTING.logger.info("复制 " + filename)
+        msg = Setting._("Backing Up") + " " + filename
+        self.label.setText(msg)
+        SETTING.logger.info("Copy " + filename)
 
     # 设置进度条的进度值
     def set_progressbar_rate(self, threshold:int):
@@ -720,8 +941,9 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
 
     # 设置zip进度条文字
     def set_zip_text(self, filename:str):
-        self.label.setText("正在压缩 " + filename)
-        SETTING.logger.info("压缩 " + filename)
+        msg = Setting._("Compressing") + " " + filename
+        self.label.setText(msg)
+        SETTING.logger.info("Compressing " + filename)
 
     # 设置zip进度条
     def set_zip_progress(self, threshold:int):
@@ -744,78 +966,83 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
 
     # cancel按钮点击事件
     def cancel_clicked(self):
-        SETTING.logger.info("点击取消")
+        SETTING.logger.info("Cancel is click.")
         # 设定全局变量标识，跨线程通信用Global类把变量传过去
         GlobalDict.set("cancel","canceled")
         self.rate_timer.stop()
         del self.rate_timer
         # 关闭自身
         self.close()
-        self.exit_show_message("备份取消")
+        self.exit_show_message(Setting._("Backup Canceled."))
 
-    # 弹窗
-    def show_message(self,msg:str):
-        QMessageBox.critical(self, "警告", msg,
-                              QMessageBox.Ok)
+    def zip_err(self, err_msg:str):
+        SETTING.logger.error(err_msg)
+        self.exit_show_message(err_msg)
+
 
     # 错误弹窗+退出,用于接收信号槽的中断备份操作
-    def exit_show_message(self,msg:str):
-        # 弹窗
-        msg_box = QMessageBox.critical(self, "错误", msg,
-                                       QMessageBox.Ok)
-        # 删除zip列表中的源文件夹临时zip
-        time.sleep(0.3)
-        for i in self.zip_file_list:
-            file = i +self.zip_tmpfile_suffix
-            if is_root(file):
-                file = add_tmp_path(file)
-            try:
-                SETTING.logger.info(f"删除临时压缩文件 {file}")
-                os.remove(file)
-            except OSError as e:
-                SETTING.logger.error(e)
+    def exit_show_message(self, msg:str):
+        def button_clicked(ok_is_click):
+            if ok_is_click:
+                SETTING.logger.info("Backup BREAKED.")
+                # 删除zip列表中的源文件夹临时zip
+                for i in self.zip_file_list:
+                    file = i + self.zip_tmpfile_suffix
+                    if is_root(file):
+                        file = add_tmp_path(file)
+                    if os.path.isfile(file):
+                        try:
+                            SETTING.logger.info("Deleting temporary compress files " + file)
+                            os.remove(file)
+                        except OSError as e:
+                            SETTING.logger.error(e)
+                if os.path.isdir(root_tmp_dir):
+                    SETTING.logger.info("Deleting temporary folder " + root_tmp_dir)
+                    try:
+                        shutil.rmtree(root_tmp_dir)
+                    except OSError as e:
+                        SETTING.logger.error(e)
+                # 删除失败的备份
+                if SETTING.Timestamp:
+                    backup_dir = SETTING.Target + '/Backup@' + SETTING.Timestamp
+                    if os.path.isdir(backup_dir):
+                        SETTING.logger.info("Deleting incomplete backup folder " + backup_dir)
+                        del_backup_dir(backup_dir)
+                self.msgbox.close()
+                ExitProgram.exit(1)
 
-        if os.path.isdir(root_tmp_dir):
-            SETTING.logger.info(f"删除临时文件夹 {root_tmp_dir}")
-            try:
-                shutil.rmtree(root_tmp_dir)
-            except OSError as e:
-                SETTING.logger.error(e)
+        if not self.EXIT_ERR:
+            self.msgbox = OneButtonMessageBoxWidget()
+            self.msgbox.setupUi(self.msgbox)
+            self.msgbox.setup_action()
+            self.msgbox.ok_signal.connect(button_clicked)
+            self.msgbox.lab_title.setStyleSheet("color:red")
+            self.msgbox.lab_title.setText(Setting._("Error!"))
+            self.msgbox.lab_message.setText(msg)
+            self.msgbox.show()
+            self.EXIT_ERR = True
 
-        # 删除失败的备份
-        if SETTING.Timestamp:
-            backup_dir = SETTING.Target + '/Backup@' + SETTING.Timestamp
-            if os.path.isdir(backup_dir):
-                SETTING.logger.info(f"删除未完成的备份文件夹{backup_dir}")
-                del_backup_dir(backup_dir)
-
-        # 点OK，退出程序
-        if msg_box == QMessageBox.Ok:
-            SETTING.logger.info("备份中止")
-            for w in QApplication.instance().allWidgets():
-                if w != self:
-                    del w
-            ExitProgram.exit(1)
 
     def copy_error(self, err_msg):
         SETTING.logger.error(err_msg)
         self.exit_show_message(err_msg)
 
+
     # 复制完成后的清理，以及显示finish窗口
     def copy_finish(self, copid_file_list:list):
-        SETTING.logger.info("所有文件复制完成")
+        SETTING.logger.info("All files copied.")
         self.rate_timer.stop()
         self.close()
         # 删除zip列表中的源文件夹临时zip
         for i in self.src_zip_tmp_files:
             try:
-                SETTING.logger.info(f"删除临时文件 {i}")
+                SETTING.logger.info("Deleting temporary file " + i)
                 os.remove(i)
             except OSError as e:
                 SETTING.logger.error(e)
         if os.path.isdir(root_tmp_dir):
             try:
-                SETTING.logger.info(f"删除临时目录 {root_tmp_dir}")
+                SETTING.logger.info("Deleting temporary folder " + root_tmp_dir)
                 shutil.rmtree(root_tmp_dir)
             except OSError as e:
                 SETTING.logger.error(e)
@@ -825,13 +1052,13 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
             for i in copid_file_list:
                 if i.endswith(self.zip_tmpfile_suffix):
                     try:
-                        SETTING.logger.info(f"重命名 {i}")
+                        SETTING.logger.info("Rename " + i)
                         os.rename(i, i.replace(self.zip_tmpfile_suffix, ".zip"))
                     except OSError as e:
                         SETTING.logger.error(e)
             finish_window.show_finish()
         else:
-            self.exit_show_message("没有备份任何文件")
+            self.exit_show_message(Setting._("Nothing Backed Up."))
 
 
 # 后台压缩
@@ -844,9 +1071,11 @@ class ZipFiles(Qt.QThread):
     # 后缀
     zip_tmpfile_suffix:str = ""
     # 定义信号槽
-    zipping_signal = QtCore.pyqtSignal(str)
-    ziprate_signal = QtCore.pyqtSignal(int)
-    zipfinish_signal = QtCore.pyqtSignal(list)
+    zipping_signal = pyqtSignal(str)
+    ziprate_signal = pyqtSignal(int)
+    zipfinish_signal = pyqtSignal(list)
+    ziperr_signal = pyqtSignal(str)
+
 
     # 要打包的文件总大小MB
     total_sizeMB = 0.1
@@ -868,7 +1097,6 @@ class ZipFiles(Qt.QThread):
         self.zip_file()
 
 
-
     # 整理列表，文件/文件夹分开操作
     def zip_file(self):
         for item in self.zip_file_list:
@@ -878,6 +1106,7 @@ class ZipFiles(Qt.QThread):
             if is_root(item):
                 try:
                     if not os.path.isdir(root_tmp_dir):
+                        SETTING.logger.info("Make temporary folder: " + root_tmp_dir)
                         os.mkdir(root_tmp_dir)
                 except OSError as e:
                     self.cancel = True
@@ -886,10 +1115,14 @@ class ZipFiles(Qt.QThread):
             # 判断是文件夹还是文件
             if os.path.isdir(item):
                 zipname = self.zip_compress_dir(item, self.zip_tmpfile_suffix)
-                self.ziped_list.append(zipname)
             else:
                 zipname = self.zip_compress_file(item, self.zip_tmpfile_suffix)
+            # 如果压缩成功，添加到已压缩列表，否则中断循环
+            if zipname:
                 self.ziped_list.append(zipname)
+            else:
+                self.cancel = True
+                break
 
         # 如果没有收到取消信号，发送已压缩的文件表到UI
         if not self.cancel:
@@ -926,8 +1159,21 @@ class ZipFiles(Qt.QThread):
         # 如果是c盘根目录，就把文件写入c盘下临时目录
         if is_root(zip_name):
             zip_name = add_tmp_path(zip_name)
+        else:
+            # 测试源文件目录写入权限
+            try:
+                print(os.path.dirname(dirpath))
+                f = open(os.path.dirname(dirpath) + "/$_Permission", "w")
+                f.write("")
+                f.close()
+                os.remove(os.path.dirname(dirpath) + "/$_Permission")
+            except Exception as e:
+                SETTING.logger.error(e)
+                self.ziperr_signal.emit(Setting._("Permission denied:") + " " + os.path.dirname(dirpath)
+                                        + Setting._("Unset the <Compress> option, try again."))
+                return
+        SETTING.logger.info("Create Zip file: " + zip_name)
         zip = zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED)
-
         # 压缩文件夹下的所有文件
         for root, dirs, files in os.walk(dirpath):
             if self.canceled():
@@ -950,23 +1196,34 @@ class ZipFiles(Qt.QThread):
     # 压缩一个文件
     def zip_compress_file(self, filename:str, suffix:str) -> str:
         self.ziped_sizeMB += os.stat(filename).st_size / 1024 / 1024
-        _, pure_name = os.path.split(filename)
+        path_name, pure_name = os.path.split(filename)
         zip_name = filename + suffix
         # 如果是c盘根目录，就把文件写入c盘下临时目录
         if is_root(zip_name):
             zip_name = add_tmp_path(zip_name)
+        else:
+            # 测试源文件目录写入权限
+            try:
+                f = open(path_name + "/$_Permission", "w")
+                f.write("")
+                f.close()
+                os.remove(path_name + "/$_Permission")
+            except Exception as e:
+                SETTING.logger.error(e)
+                self.ziperr_signal.emit(Setting._("Permission denied:") + " " + path_name
+                                        + Setting._("Unset the <Compress> option, try again."))
+                return
         self.send_filename(pure_name)
         self.send_rate()
+        SETTING.logger.info("Create Zip file: " + zip_name)
         zip = zipfile.ZipFile(zip_name, 'w', zipfile.ZIP_DEFLATED)
         zip.write(filename, pure_name)
         self.send_rate()
         zip.close()
         return zip_name
 
-
 # 后台文件复制
 class BackingUpFiles(Qt.QThread):
-
 
     # 待复制文件列表
     to_copy_list:list = []
@@ -1011,18 +1268,21 @@ class BackingUpFiles(Qt.QThread):
             # 开始备份
             self.backup_files()
         elif i_ret == -1:
-            err_msg = f"目标磁盘{dst_drive}空间不足"
+            err_msg = Setting._("Disk") + " " + dst_drive + " " + Setting._("is insufficient space.")
             self.copy_err_signal.emit(err_msg)
         elif i_ret == -2:
-            err_msg = f"目标磁盘{dst_drive}找不到"
+            err_msg = Setting._("Disk") + " " + dst_drive + " " + Setting._("can't find.")
             self.copy_err_signal.emit(err_msg)
 
 
     def get_total_size(self) -> float:
         ret = 0.0
         for i in self.to_copy_list:
-            filesizeMB = os.stat(i).st_size / 1024 / 1024
-            ret += filesizeMB
+            if os.path.isfile(i):
+                filesizeMB = os.stat(i).st_size / 1024 / 1024
+                ret += filesizeMB
+            else:
+                self.copy_err_signal.emit(Setting._("Source file not found!"))
         return ret
 
 
@@ -1043,7 +1303,7 @@ class BackingUpFiles(Qt.QThread):
             # 整理目标文件名，去掉非法字符
             dst_filename = src_filename.replace(root_tmp_dir,"C:/")
             target_filename = (self.backup_dest_path + "/" +
-                               cut_pathname_prefix(dst_filename.replace(":/","盘/")))
+                               cut_pathname_prefix(dst_filename.replace(":/",Setting._("disk/"))))
             # 打包子线程参数
             args = (self, src_filename, target_filename, SETTING.Target)
             # 给复制文件子线程传参数
@@ -1054,7 +1314,10 @@ class BackingUpFiles(Qt.QThread):
             _, filename = os.path.split(src_filename)
             self.filename_signal.emit(filename)
             # 获取当前文件大小，单位MB
-            filesize = os.stat(src_filename).st_size / 1024 / 1024 +.000001
+            try:
+                filesize = os.stat(src_filename).st_size / 1024 / 1024 +.000001
+            except Exception as e:
+                self.copy_err_signal.emit(str(e))
             self.copid_files_sizeMB += filesize
             # 进度条当次阈值，按size计算千分比，最小1，最大999
             self.threshold = int(filesize / self.total_sizeMB * 1000)
@@ -1092,12 +1355,12 @@ class BackingUpFiles(Qt.QThread):
     # 接收文件拷贝完成的信号槽函数
     def receive_copied(self, copied:bool):
         if copied:
-            SETTING.logger.info("复制完成")
+            SETTING.logger.info("Copy complete.")
             self.copy_count += 1
 
     # 接收文件拷贝异常的信号槽函数
     def copy_err_message(self, msg:str):
-        SETTING.logger.error("复制文件错误")
+        SETTING.logger.error("Copy File Error.")
         self.rate_loop_break = True
         self.error_code = -1
         self.copy_err_signal.emit(msg)
@@ -1124,25 +1387,35 @@ class FinishWidget(ui_finish.Ui_Form, QWidget):
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
         self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
         self.setWindowFlag(QtCore.Qt.WindowStaysOnTopHint, True)
+        self.lab_title.setText(Setting._("Successfully Backed Up to"))
+        self.btn_ok.setText(Setting._("OK"))
+        self.lab_prompt.setWordWrap(True)
         # Mac版UI调整
         if not sys.platform == "win32":
+            title_font = QFont()
+            title_font.setFamily("Microsoft YaHei")
+            title_font.setPointSize(16)
+            self.lab_title.setFont(title_font)
             font = QFont()
             font.setFamily("Microsoft YaHei")
-            font.setPointSize(12)
+            font.setPointSize(13)
             self.lab_prompt.setFont(font)
+            self.btn_ok.setFont(font)
         # 设置按钮
         self.btn_ok.clicked.connect(lambda : self.ok_clicked())
         self.btn_close.clicked.connect(lambda : self.ok_clicked())
         # 设置文字
-        self.lab_prompt.setText("已成功备份到\n"
-                                f"{SETTING.Target + '/Backup@' + SETTING.Timestamp}")
+        self.lab_prompt.setText(SETTING.Target + "/Backup@" + SETTING.Timestamp)
 
     # 拖动窗口鼠标按下事件
     def mousePressEvent(self, event):
         if event.button() == QtCore.Qt.LeftButton:
-            super(FinishWidget, self).mousePressEvent(event)
-            self.start_x = event.x()
-            self.start_y = event.y()
+            try:
+                super(FinishWidget, self).mousePressEvent(event)
+                self.start_x = event.x()
+                self.start_y = event.y()
+            except:
+                pass
 
     # 拖动窗口鼠标弹起事件
     def mouseReleaseEvent(self, event):
@@ -1152,14 +1425,16 @@ class FinishWidget(ui_finish.Ui_Form, QWidget):
     # 拖动窗口鼠标按住拖动事件
     def mouseMoveEvent(self, event):
         super(FinishWidget, self).mouseMoveEvent(event)
-        dis_x = event.x() - self.start_x
-        dis_y = event.y() - self.start_y
-        self.move(self.x() + dis_x, self.y() + dis_y)
-
+        try:
+            dis_x = event.x() - self.start_x
+            dis_y = event.y() - self.start_y
+            self.move(self.x() + dis_x, self.y() + dis_y)
+        except:
+            pass
 
     # ok按钮点击事件
     def ok_clicked(self):
-        SETTING.logger.info("完成")
+        SETTING.logger.info("Backup Successfully Complete.")
         self.close()
         # 退出
         ExitProgram.exit(0)
@@ -1224,12 +1499,15 @@ class ExitProgram:
             log_file = res_path("backup.log")
             backup_dest_path = SETTING.Target + "/Backup@" + SETTING.Timestamp
             try:
-                shutil.copy(log_file, backup_dest_path +"/"+ SETTING.Timestamp + ".备份日志.log")
+                shutil.copy(log_file, backup_dest_path +"/"+ SETTING.Timestamp + "." + Setting._("backup_log") + ".log")
             except OSError as e:
                 SETTING.logger.error(e)
+        # 删除窗口实例
+        for w in QApplication.instance().allWidgets():
+            if w != self:
+                del w
         # 退出
         os._exit(errcode)
-
 
 # 程序入口
 if __name__ == "__main__":

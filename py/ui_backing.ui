@@ -195,7 +195,7 @@ border-radius:18px
     <property name="font">
      <font>
       <family>Microsoft YaHei</family>
-      <pointsize>11</pointsize>
+      <pointsize>10</pointsize>
      </font>
     </property>
     <property name="styleSheet">

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>500</width>
-    <height>235</height>
+    <width>535</width>
+    <height>280</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -113,7 +113,7 @@ border-radius:20px
         </property>
         <layout class="QHBoxLayout" name="top_frame_horizontalLayout" stretch="19,1">
          <property name="spacing">
-          <number>57</number>
+          <number>63</number>
          </property>
          <property name="leftMargin">
           <number>0</number>
@@ -171,7 +171,7 @@ border-radius:20px
               </property>
               <property name="maximumSize">
                <size>
-                <width>80</width>
+                <width>90</width>
                 <height>28</height>
                </size>
               </property>
@@ -296,7 +296,7 @@ border-radius:20px
               <property name="font">
                <font>
                 <family>Microsoft YaHei</family>
-                <pointsize>11</pointsize>
+                <pointsize>10</pointsize>
                </font>
               </property>
               <property name="layoutDirection">
@@ -985,7 +985,7 @@ border:none;
              <property name="font">
               <font>
                <family>Microsoft YaHei</family>
-               <pointsize>11</pointsize>
+               <pointsize>10</pointsize>
               </font>
              </property>
              <property name="styleSheet">
@@ -1144,7 +1144,7 @@ QPushButton:pressed {
              <property name="font">
               <font>
                <family>Microsoft YaHei</family>
-               <pointsize>11</pointsize>
+               <pointsize>10</pointsize>
               </font>
              </property>
              <property name="styleSheet">

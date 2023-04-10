@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(500, 235)
+        Form.resize(535, 280)
         Form.setMinimumSize(QtCore.QSize(460, 235))
         self.horizontalLayout = QtWidgets.QHBoxLayout(Form)
         self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
@@ -54,7 +54,7 @@ class Ui_Form(object):
         self.top_frame.setObjectName("top_frame")
         self.top_frame_horizontalLayout = QtWidgets.QHBoxLayout(self.top_frame)
         self.top_frame_horizontalLayout.setContentsMargins(0, 0, 0, 0)
-        self.top_frame_horizontalLayout.setSpacing(57)
+        self.top_frame_horizontalLayout.setSpacing(63)
         self.top_frame_horizontalLayout.setObjectName("top_frame_horizontalLayout")
         self.path_frame = QtWidgets.QFrame(self.top_frame)
         self.path_frame.setStyleSheet("QFrame#frame{\n"
@@ -76,7 +76,7 @@ class Ui_Form(object):
         sizePolicy.setHeightForWidth(self.btn_set_target.sizePolicy().hasHeightForWidth())
         self.btn_set_target.setSizePolicy(sizePolicy)
         self.btn_set_target.setMinimumSize(QtCore.QSize(66, 28))
-        self.btn_set_target.setMaximumSize(QtCore.QSize(80, 28))
+        self.btn_set_target.setMaximumSize(QtCore.QSize(90, 28))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(177, 177, 177))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -117,7 +117,7 @@ class Ui_Form(object):
         self.btn_set_target.setPalette(palette)
         font = QtGui.QFont()
         font.setFamily("Microsoft YaHei")
-        font.setPointSize(11)
+        font.setPointSize(10)
         self.btn_set_target.setFont(font)
         self.btn_set_target.setLayoutDirection(QtCore.Qt.RightToLeft)
         self.btn_set_target.setStyleSheet("QPushButton{\n"
@@ -403,7 +403,7 @@ class Ui_Form(object):
         self.btn_clear_file.setPalette(palette)
         font = QtGui.QFont()
         font.setFamily("Microsoft YaHei")
-        font.setPointSize(11)
+        font.setPointSize(10)
         self.btn_clear_file.setFont(font)
         self.btn_clear_file.setStyleSheet("QPushButton{\n"
 "    \n"
@@ -464,7 +464,7 @@ class Ui_Form(object):
         self.btn_start_backup.setPalette(palette)
         font = QtGui.QFont()
         font.setFamily("Microsoft YaHei")
-        font.setPointSize(11)
+        font.setPointSize(10)
         self.btn_start_backup.setFont(font)
         self.btn_start_backup.setStyleSheet("QPushButton{\n"
 "    \n"

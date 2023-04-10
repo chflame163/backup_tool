@@ -104,9 +104,7 @@ def insufficient_space(dst_drive:str, needsizeMB:float) -> int:
             ret = 0
     except Exception as e:
         ret = -2
-
     return ret
-
 
 # 本类集合文件操作相关方法
 class File(QThread):
@@ -130,7 +128,7 @@ class File(QThread):
     def copy_file(self, srcfile:str, dstfile:str, dstpath:str):
         # 判断源文件是否存在
         if not os.path.isfile(srcfile):
-            self.copy_err_signal.emit("源文件不存在")
+            self.copy_err_signal.emit("Source file not exist")
         else:
             # 分离文件名和路径
             dpath, dname = os.path.split(dstfile)
@@ -143,14 +141,10 @@ class File(QThread):
             # 复制文件
             try:
                 shutil.copy(srcfile, dstfile)
-            except OSError as e:
+            except Exception as e:
                 self.copy_err_signal.emit(e)
         # 如果文件复制完毕，发送信号
         while not os.path.isfile(dstfile):
             time.sleep(0.5)
         else:
             self.copied_signal.emit(True)
-
-
-
-

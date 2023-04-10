@@ -3,3 +3,8 @@ __pycache__/
 .idea/
 .DS_Store
 test*.*
+ReleaseVersion/
+*.zip
+*.log
+*.setting
+Thumbs.db

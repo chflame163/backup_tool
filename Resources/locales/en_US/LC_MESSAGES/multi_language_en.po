@@ -1,0 +1,227 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR ORGANIZATION
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"POT-Creation-Date: 2023-04-10 12:54+0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: pygettext.py 1.5\n"
+
+
+#: ./backup_tool.py:168
+msgid "Yes"
+msgstr "Yes"
+
+#: ./backup_tool.py:169
+msgid "No"
+msgstr "No"
+
+#: ./backup_tool.py:235 ./backup_tool.py:1389
+msgid "OK"
+msgstr "OK"
+
+#: ./backup_tool.py:299
+msgid "Clear List"
+msgstr "Clear List"
+
+#: ./backup_tool.py:300
+msgid "Backup To"
+msgstr "Backup To"
+
+#: ./backup_tool.py:301
+msgid "Start Backup"
+msgstr "Start Backup"
+
+#: ./backup_tool.py:325
+msgid "The following files were backed up last time"
+msgstr "The following files were backed up last time"
+
+#: ./backup_tool.py:327 ./backup_tool.py:556
+msgid "Choose the backup Destination Folder"
+msgstr "Choose the backup Destination Folder"
+
+#: ./backup_tool.py:499 ./backup_tool.py:567 ./backup_tool.py:574
+#: ./backup_tool.py:861
+msgid "Compress"
+msgstr "📦"
+
+#: ./backup_tool.py:500 ./backup_tool.py:508
+msgid "Remove from List"
+msgstr "Remove from List"
+
+#: ./backup_tool.py:501
+msgid "Unset <Compress>"
+msgstr "Unset <Compress>"
+
+#: ./backup_tool.py:509
+msgid "Set <Compress> when backup"
+msgstr "Set <Compress> when backup"
+
+#: ./backup_tool.py:517
+msgid "Remove selected from List"
+msgstr "Remove selected from List"
+
+#: ./backup_tool.py:519
+msgid "Set selected <Compress> when backup"
+msgstr "Set selected <Compress> when backup"
+
+#: ./backup_tool.py:521
+msgid "Selected unset <Compress>"
+msgstr "Selected unset <Compress>"
+
+#: ./backup_tool.py:546
+msgid "Please set the Destination Folder and Drag the backup files first."
+msgstr "Please set the Destination Folder and Drag the backup files first."
+
+#: ./backup_tool.py:613
+msgid "Click the 'Backup to' button above and select the backup Destination Folder,"
+msgstr "Click the 'Backup to' button above and select the backup Destination Folder,"
+
+#: ./backup_tool.py:614
+msgid "then drag the Files/Folders to be backed up here."
+msgstr "then drag the Files/Folders to be backed up here."
+
+#: ./backup_tool.py:615
+msgid "Select one or more entries, right-click, for more options,"
+msgstr "Select one or more entries, right-click, for more options,"
+
+#: ./backup_tool.py:616
+msgid "you can set <Compress> or Remove selected from the List."
+msgstr "you can set <Compress> or Remove selected from the List."
+
+#: ./backup_tool.py:617
+msgid "After setting up, click the 'Start Backup' button,"
+msgstr "After setting up, click the 'Start Backup' button,"
+
+#: ./backup_tool.py:618
+msgid "a folder will be created in Destination Folder, named by current time."
+msgstr "a folder will be created in Destination Folder, named by current time."
+
+#: ./backup_tool.py:619
+msgid "When backed up once time, all of settings will be remembered later."
+msgstr "When backed up once time, all of settings will be remembered later."
+
+#: ./backup_tool.py:620
+msgid "Let's Go!"
+msgstr "Let's Go!"
+
+#: ./backup_tool.py:646
+msgid "Warning!"
+msgstr "Warning!"
+
+#: ./backup_tool.py:661
+msgid "Remove this File/Folder from List?"
+msgstr "Remove this File/Folder from List?"
+
+#: ./backup_tool.py:690
+msgid "Cancel"
+msgstr "Cancel"
+
+#: ./backup_tool.py:691 ./backup_tool.py:922
+msgid "Backing Up"
+msgstr "Backing Up"
+
+#: ./backup_tool.py:703
+msgid "<year>"
+msgstr "_"
+
+#: ./backup_tool.py:704
+msgid "<month>"
+msgstr "_"
+
+#: ./backup_tool.py:705
+msgid "<day>"
+msgstr "_"
+
+#: ./backup_tool.py:719 ./backup_tool.py:868 ./backup_tool.py:880
+#: ./backup_tool.py:912 ./backup_tool.py:916
+msgid "Can't find"
+msgstr "Can't find"
+
+#: ./backup_tool.py:732
+msgid "Failed to create Destination Folder, Permission denied."
+msgstr "Failed to create Destination Folder, Permission denied."
+
+#: ./backup_tool.py:734
+msgid "Choose another Destination Folder."
+msgstr "Choose another Destination Folder."
+
+#: ./backup_tool.py:737
+msgid "Can't find disk"
+msgstr "Can't find disk"
+
+#: ./backup_tool.py:776
+msgid "is insufficient disk space to compress."
+msgstr "is insufficient disk space to compress."
+
+#: ./backup_tool.py:781
+msgid "Disk error!"
+msgstr "Disk error!"
+
+#: ./backup_tool.py:868 ./backup_tool.py:912
+msgid "folder, Please check it!"
+msgstr "folder, Please check it!"
+
+#: ./backup_tool.py:880 ./backup_tool.py:916
+msgid ", Please check the file!"
+msgstr ", Please check the file!"
+
+#: ./backup_tool.py:943
+msgid "Compressing"
+msgstr "Compressing"
+
+#: ./backup_tool.py:975
+msgid "Backup Canceled."
+msgstr "Backup Canceled."
+
+#: ./backup_tool.py:1019
+msgid "Error!"
+msgstr "Error!"
+
+#: ./backup_tool.py:1060
+msgid "Nothing Backed Up."
+msgstr "Nothing Backed Up."
+
+#: ./backup_tool.py:1170 ./backup_tool.py:1212
+msgid "Permission denied:"
+msgstr "Permission denied:"
+
+#: ./backup_tool.py:1171 ./backup_tool.py:1213
+msgid "Unset the <Compress> option, try again."
+msgstr "Unset the <Compress> option, try again."
+
+#: ./backup_tool.py:1269
+msgid "is insufficient space."
+msgstr "is insufficient space."
+
+#: ./backup_tool.py:1269 ./backup_tool.py:1272
+msgid "Disk"
+msgstr "Disk"
+
+#: ./backup_tool.py:1272
+msgid "can't find."
+msgstr "can't find."
+
+#: ./backup_tool.py:1283
+msgid "Source file not found!"
+msgstr "Source file not found!"
+
+#: ./backup_tool.py:1304
+msgid "disk/"
+msgstr "disk/"
+
+#: ./backup_tool.py:1388
+msgid "Successfully Backed Up to"
+msgstr "Successfully Backed Up to"
+
+#: ./backup_tool.py:1500
+msgid "backup_log"
+msgstr "backup_log"
+

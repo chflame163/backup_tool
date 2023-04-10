@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ui_backing.ui'
+# Form implementation generated from reading ui file 'ui_msgbox.ui'
 #
 # Created by: PyQt5 UI code generator 5.15.4
 #
@@ -14,29 +14,70 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(530, 125)
-        Form.setMinimumSize(QtCore.QSize(530, 125))
-        Form.setMaximumSize(QtCore.QSize(530, 125))
+        Form.resize(400, 180)
+        Form.setMinimumSize(QtCore.QSize(400, 180))
+        Form.setMaximumSize(QtCore.QSize(400, 180))
         font = QtGui.QFont()
         font.setFamily("微软雅黑")
         Form.setFont(font)
-        icon = QtGui.QIcon()
-        icon.addPixmap(QtGui.QPixmap("BackupTool.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        Form.setWindowIcon(icon)
         self.frame = QtWidgets.QFrame(Form)
-        self.frame.setGeometry(QtCore.QRect(10, 0, 511, 121))
+        self.frame.setGeometry(QtCore.QRect(10, 10, 381, 161))
         self.frame.setStyleSheet("QFrame#frame{\n"
 "    background-color: qlineargradient(x0:0, y1:0,x0:1, y2:1, stop:0 rgba(240, 240, 240,233), stop:1 rgba(222, 222, 222,233));\n"
 "border-radius:18px  \n"
 "}\n"
 "")
-        self.frame.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.frame.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame.setFrameShadow(QtWidgets.QFrame.Raised)
-        self.frame.setLineWidth(0)
         self.frame.setObjectName("frame")
-        self.btn_cancel = QtWidgets.QPushButton(self.frame)
-        self.btn_cancel.setGeometry(QtCore.QRect(214, 80, 78, 28))
-        self.btn_cancel.setMinimumSize(QtCore.QSize(0, 28))
+        self.lab_title = QtWidgets.QLabel(self.frame)
+        self.lab_title.setGeometry(QtCore.QRect(20, 7, 341, 31))
+        font = QtGui.QFont()
+        font.setFamily("Microsoft YaHei")
+        font.setPointSize(16)
+        self.lab_title.setFont(font)
+        self.lab_title.setStyleSheet("color: rgb(49, 54, 54)")
+        self.lab_title.setAlignment(QtCore.Qt.AlignCenter)
+        self.lab_title.setObjectName("lab_title")
+        self.lab_message = QtWidgets.QLabel(self.frame)
+        self.lab_message.setGeometry(QtCore.QRect(20, 30, 341, 81))
+        font = QtGui.QFont()
+        font.setFamily("Microsoft YaHei")
+        font.setPointSize(10)
+        self.lab_message.setFont(font)
+        self.lab_message.setStyleSheet("color: rgb(33, 38, 38)")
+        self.lab_message.setAlignment(QtCore.Qt.AlignCenter)
+        self.lab_message.setObjectName("lab_message")
+        self.btn_close = QtWidgets.QPushButton(self.frame)
+        self.btn_close.setGeometry(QtCore.QRect(359, 9, 14, 14))
+        self.btn_close.setMinimumSize(QtCore.QSize(14, 14))
+        self.btn_close.setMaximumSize(QtCore.QSize(14, 14))
+        self.btn_close.setStyleSheet("QPushButton{\n"
+"    \n"
+"    background-color: rgb(240, 108, 96);\n"
+"border:0px solid rgba(113, 17, 15,50);\n"
+"border-radius:6px;\n"
+"}\n"
+"QPushButton:hover {\n"
+"background-color:rgb(139, 29, 31)\n"
+"    \n"
+"}\n"
+"QPushButton:pressed {\n"
+"    background-color: rgb(232, 59, 35);\n"
+"}\n"
+"")
+        self.btn_close.setText("")
+        self.btn_close.setObjectName("btn_close")
+        self.layoutWidget = QtWidgets.QWidget(self.frame)
+        self.layoutWidget.setGeometry(QtCore.QRect(70, 110, 241, 41))
+        self.layoutWidget.setObjectName("layoutWidget")
+        self.btn_horizontalLayout = QtWidgets.QHBoxLayout(self.layoutWidget)
+        self.btn_horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.btn_horizontalLayout.setSpacing(36)
+        self.btn_horizontalLayout.setObjectName("btn_horizontalLayout")
+        self.btn_ok = QtWidgets.QPushButton(self.layoutWidget)
+        self.btn_ok.setMinimumSize(QtCore.QSize(0, 36))
+        self.btn_ok.setMaximumSize(QtCore.QSize(88, 16777215))
         palette = QtGui.QPalette()
         brush = QtGui.QBrush(QtGui.QColor(177, 177, 177))
         brush.setStyle(QtCore.Qt.SolidPattern)
@@ -74,16 +115,16 @@ class Ui_Form(object):
         brush = QtGui.QBrush(QtGui.QColor(177, 177, 177))
         brush.setStyle(QtCore.Qt.SolidPattern)
         palette.setBrush(QtGui.QPalette.Disabled, QtGui.QPalette.Window, brush)
-        self.btn_cancel.setPalette(palette)
+        self.btn_ok.setPalette(palette)
         font = QtGui.QFont()
         font.setFamily("Microsoft YaHei")
         font.setPointSize(10)
-        self.btn_cancel.setFont(font)
-        self.btn_cancel.setStyleSheet("QPushButton{\n"
+        self.btn_ok.setFont(font)
+        self.btn_ok.setStyleSheet("QPushButton{\n"
 "    \n"
 "    background-color: rgb(177,177, 177);\n"
 "border:2px solid rgba(199, 199, 199,50);\n"
-"border-radius:9px;\n"
+"border-radius:12px;\n"
 "}\n"
 "QPushButton:hover {\n"
 "background-color:rgb(144, 144, 144)\n"
@@ -93,41 +134,16 @@ class Ui_Form(object):
 "    background-color: rgb(111, 111, 111);\n"
 "}\n"
 "")
-        self.btn_cancel.setObjectName("btn_cancel")
-        self.label = QtWidgets.QLabel(self.frame)
-        self.label.setGeometry(QtCore.QRect(20, 22, 471, 21))
-        font = QtGui.QFont()
-        font.setFamily("Microsoft YaHei")
-        font.setPointSize(10)
-        self.label.setFont(font)
-        self.label.setStyleSheet("color: rgb(33, 38, 38)")
-        self.label.setObjectName("label")
-        self.progressBar = QtWidgets.QProgressBar(self.frame)
-        self.progressBar.setGeometry(QtCore.QRect(20, 46, 471, 28))
-        font = QtGui.QFont()
-        font.setFamily("Microsoft YaHei")
-        font.setPointSize(10)
-        self.progressBar.setFont(font)
-        self.progressBar.setStyleSheet("QProgressBar::chunk {\n"
-"        border-top-left-radius:6px;\n"
-"border-bottom-left-radius:6px;\n"
-"    background-color: rgb(40, 100, 222)\n"
-"}\n"
-"QProgressBar{\n"
-"border-radius:6px;\n"
-"background-color: rgb(223, 223, 223);\n"
-"}\n"
-"")
-        self.progressBar.setMaximum(1000)
-        self.progressBar.setProperty("value", 0)
-        self.progressBar.setAlignment(QtCore.Qt.AlignCenter)
-        self.progressBar.setObjectName("progressBar")
+        self.btn_ok.setObjectName("btn_ok")
+        self.btn_horizontalLayout.addWidget(self.btn_ok)
 
         self.retranslateUi(Form)
         QtCore.QMetaObject.connectSlotsByName(Form)
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        Form.setWindowTitle(_translate("Form", "备份中"))
-        self.btn_cancel.setText(_translate("Form", "取消"))
-        self.label.setText(_translate("Form", "正在备份"))
+        Form.setWindowTitle(_translate("Form", "Warning!"))
+        self.lab_title.setText(_translate("Form", "警告！"))
+        self.lab_message.setText(_translate("Form", "消息\n"
+""))
+        self.btn_ok.setText(_translate("Form", "Yes"))
