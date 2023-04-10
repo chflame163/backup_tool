@@ -22,6 +22,7 @@ it can also choose compression options.
 ## Which operating systems are supported？
 This program can be package to an executable file through pyinstaller,
 on windows, will package to a .exe file, and on MacOS, package to a .app file.
+Teste passed on Windows 10 and MacOS Bigsur 11.6.8.
 
 ## Release Note:
 Version 1.0.1
