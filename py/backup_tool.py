@@ -8,7 +8,7 @@ import zipfile
 import logging
 import gettext
 import locale
-from PySide6 import Qt, QtCore
+from PySide6 import QtCore
 from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QMessageBox, QMenu
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont
 # from PyQt5 import Qt, QtCore
@@ -289,7 +289,10 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
     min_window_width:int = 500
     min_window_height:int = 235
     # 根据窗口宽度计算列宽偏移量
-    column_width_offset:int = 184
+    if sys.platform == "win32":
+        column_width_offset: int = 168
+    else:
+        column_width_offset:int = 184
     # 采集拖放文件名的临时变量
     tmp_dorp_filename:list = []
 
