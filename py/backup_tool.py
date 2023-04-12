@@ -8,9 +8,12 @@ import zipfile
 import logging
 import gettext
 import locale
-from PyQt5 import Qt, QtCore
-from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QMessageBox, QMenu
-from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont
+from PySide6 import Qt, QtCore
+from PySide6.QtWidgets import QApplication, QWidget, QFileDialog, QMessageBox, QMenu
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QFont
+# from PyQt5 import Qt, QtCore
+# from PyQt5.QtWidgets import QApplication, QWidget, QFileDialog, QMessageBox, QMenu
+# from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont
 # 导入项目内模块
 import ui_backing, ui_finish, ui_editlist, ui_msgbox_yn, ui_msgbox
 from bks_file_opration import *
@@ -155,7 +158,7 @@ class Setting:
 # 弹窗，两个按钮
 class TowButtonMessageBoxWidget(ui_msgbox_yn.Ui_Form, QWidget):
 
-    yes_signal = pyqtSignal(bool)
+    yes_signal = QtCore.Signal(bool)
 
     # 设置按钮
     def setup_action(self):
@@ -191,8 +194,8 @@ class TowButtonMessageBoxWidget(ui_msgbox_yn.Ui_Form, QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             try:
                 super(TowButtonMessageBoxWidget, self).mousePressEvent(event)
-                self.start_x = event.x()
-                self.start_y = event.y()
+                self.start_x = int(event.position().x())
+                self.start_y = int(event.position().y())
             except:
                 pass
 
@@ -205,8 +208,8 @@ class TowButtonMessageBoxWidget(ui_msgbox_yn.Ui_Form, QWidget):
     def mouseMoveEvent(self, event):
         super(TowButtonMessageBoxWidget, self).mouseMoveEvent(event)
         try:
-            dis_x = event.x() - self.start_x
-            dis_y = event.y() - self.start_y
+            dis_x = int(event.position().x()) - self.start_x
+            dis_y = int(event.position().y()) - self.start_y
             self.move(self.x() + dis_x, self.y() + dis_y)
         except:
             pass
@@ -222,7 +225,7 @@ class TowButtonMessageBoxWidget(ui_msgbox_yn.Ui_Form, QWidget):
 # 弹窗，一个按钮
 class OneButtonMessageBoxWidget(ui_msgbox.Ui_Form, QWidget):
 
-    ok_signal = pyqtSignal(bool)
+    ok_signal = QtCore.Signal(bool)
 
     # 设置按钮
     def setup_action(self):
@@ -255,8 +258,8 @@ class OneButtonMessageBoxWidget(ui_msgbox.Ui_Form, QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             try:
                 super(OneButtonMessageBoxWidget, self).mousePressEvent(event)
-                self.start_x = event.x()
-                self.start_y = event.y()
+                self.start_x = int(event.position().x())
+                self.start_y = int(event.position().y())
             except:
                 pass
 
@@ -269,8 +272,8 @@ class OneButtonMessageBoxWidget(ui_msgbox.Ui_Form, QWidget):
     def mouseMoveEvent(self, event):
         super(OneButtonMessageBoxWidget, self).mouseMoveEvent(event)
         try:
-            dis_x = event.x() - self.start_x
-            dis_y = event.y() - self.start_y
+            dis_x = int(event.position().x()) - self.start_x
+            dis_y = int(event.position().y()) - self.start_y
             self.move(self.x() + dis_x, self.y() + dis_y)
         except:
             pass
@@ -286,7 +289,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
     min_window_width:int = 500
     min_window_height:int = 235
     # 根据窗口宽度计算列宽偏移量
-    column_width_offset:int = 174
+    column_width_offset:int = 184
     # 采集拖放文件名的临时变量
     tmp_dorp_filename:list = []
 
@@ -354,30 +357,34 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         event.accept()
         self.close()
 
+    def resizeEvent(self, event):
+        self.set_tableview_columnwidth()
+
     # 鼠标按下事件
     def mousePressEvent(self, event):
         # 获取窗体当前坐标
         self.origin_x = self.x()
         self.origin_y = self.y()
         # 获取鼠标点击坐标
-        self.mouse_x = event.globalX()
-        self.mouse_y = event.globalY()
+
+        self.mouse_x = int(event.globalPosition().x())
+        self.mouse_y = int(event.globalPosition().y())
         try:
             # 如果按住右下角
-            if self.childAt(event.x(), event.y()) in [self.conner_frame]:
+            if self.childAt(int(event.position().x()), int(event.position().y())) in [self.conner_frame]:
                 self.drag_event = 1
             # 如果按住右边框
-            elif self.childAt(event.x(), event.y()) in [self.right_side_frame]:
+            elif self.childAt(int(event.position().x()), int(event.position().y())) in [self.right_side_frame]:
                 self.drag_event = 2
             # 如果按住下边框
-            elif self.childAt(event.x(), event.y()) in [self.bottom_side_frame]:
+            elif self.childAt(int(event.position().x()), int(event.position().y())) in [self.bottom_side_frame]:
                 self.drag_event = 3
             # 只移动不调整大小
             else:
                 self.drag_event = 0
                 super(EditListWidget, self).mousePressEvent(event)
-                self.start_x = event.x()
-                self.start_y = event.y()
+                self.start_x = int(event.position().x())
+                self.start_y = int(event.position().y())
         except:
             pass
 
@@ -390,8 +397,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         self.start_y = None
         self.mouse_x = None
         self.mouse_y = None
-        # 调整列宽
-        self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
+
 
     # 鼠标按住拖动事件
     def mouseMoveEvent(self, event):
@@ -399,40 +405,38 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             # 只移动
             if self.drag_event == 0:
                 super(EditListWidget, self).mouseMoveEvent(event)
-                dis_x = event.x() - self.start_x
-                dis_y = event.y() - self.start_y
+                dis_x = int(event.position().x()) - self.start_x
+                dis_y = int(event.position().y()) - self.start_y
                 self.move(self.x() + dis_x, self.y() + dis_y)
             # 调整宽和高
             elif self.drag_event == 1:
-                if event.x() < self.min_window_width:
+
+                if int(event.position().x()) < self.min_window_width:
                     x = self.min_window_width
                 else:
-                    x = event.x()
-                if event.y() < self.min_window_height:
+                    x = int(event.position().x())
+                if int(event.position().y()) < self.min_window_height:
                     y = self.min_window_height
                 else:
-                    y = event.y()
+                    y = int(event.position().y())
                 self.setGeometry(self.origin_x, self.origin_y, x, y)
                 self.frame.setGeometry(0, 0, x, y)
-                # 调整列宽
-                self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
+
 
             # 只调整宽
             elif self.drag_event == 2:
-                if event.x() < self.min_window_width:
+                if int(event.position().x()) < self.min_window_width:
                     x = self.min_window_width
                 else:
-                    x = event.x()
+                    x = int(event.position().x())
                 self.setGeometry(self.origin_x, self.origin_y, x, self.height())
                 self.frame.setGeometry(0, 0, x, self.frame.height())
-                # 调整列宽
-                self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
             # 只调整高
             elif self.drag_event == 3:
-                if event.y() < self.min_window_height:
+                if int(event.position().y()) < self.min_window_height:
                     y = self.min_window_height
                 else:
-                    y = event.y()
+                    y = int(event.position().y())
                 self.setGeometry(self.origin_x, self.origin_y, self.width(), y)
                 self.frame.setGeometry(0, 0, self.frame.width(), y)
         except:
@@ -499,7 +503,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             if Setting._("Compress") in selected_items.values():
                 del_items = r_menu.addAction(Setting._("Remove from List"))
                 uncomprs_item = r_menu.addAction(Setting._("Unset <Compress>"))
-                click = r_menu.exec_(screenPos)
+                click = r_menu.exec(screenPos)
                 if click == uncomprs_item:
                     self.set_item_uncompress(list(selected_items.keys()))
                 elif click == del_items:
@@ -507,7 +511,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
             else:
                 del_items = r_menu.addAction(Setting._("Remove from List"))
                 comprs_item = r_menu.addAction(Setting._("Set <Compress> when backup"))
-                click = r_menu.exec_(screenPos)
+                click = r_menu.exec(screenPos)
                 if click == comprs_item:
                     self.set_item_compress(list(selected_items.keys()))
                 elif click == del_items:
@@ -519,7 +523,7 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
                 compress_items = r_menu.addAction(Setting._("Set selected <Compress> when backup"))
             if "压缩" in list(selected_items.values()):
                 uncompress_items = r_menu.addAction(Setting._("Selected unset <Compress>"))
-            click = r_menu.exec_(screenPos)
+            click = r_menu.exec(screenPos)
             if click == del_items:
                 self.del_items(selected_items)
             try:
@@ -630,9 +634,12 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
         self.tableView.verticalHeader().setVisible(False)
         self.tableView.horizontalHeader().setVisible(False)
         # 调整列宽
-        self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
+        self.set_tableview_columnwidth()
         self.tableView.setColumnWidth(1, 32)
 
+    def set_tableview_columnwidth(self):
+        # 调整列宽
+        self.tableView.setColumnWidth(0, self.width() - self.column_width_offset)
 
     # 弹窗消息框
     def show_message(self, msg:str):
@@ -664,10 +671,10 @@ class EditListWidget(ui_editlist.Ui_Form, QWidget):
 
 
 # 进度条窗口的GUI部件与业务逻辑
-class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
+class BackingWidget(ui_backing.Ui_Form, QWidget, QtCore.QThread):
 
     # 点击取消按钮的信号槽，通知后台中断文件操作
-    cancel_signal = QtCore.pyqtSignal(bool)
+    cancel_signal = QtCore.Signal(bool)
     # zip列表
     zip_file_list:list = []
     # zip临时文件后缀
@@ -817,8 +824,8 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
         if event.button() == QtCore.Qt.LeftButton:
             try:
                 super(BackingWidget, self).mousePressEvent(event)
-                self.start_x = event.x()
-                self.start_y = event.y()
+                self.start_x = int(event.position().x())
+                self.start_y = int(event.position().y())
             except:
                 pass
 
@@ -831,8 +838,8 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
     def mouseMoveEvent(self, event):
         super(BackingWidget, self).mouseMoveEvent(event)
         try:
-            dis_x = event.x() - self.start_x
-            dis_y = event.y() - self.start_y
+            dis_x = int(event.position().x()) - self.start_x
+            dis_y = int(event.position().y()) - self.start_y
             self.move(self.x() + dis_x, self.y() + dis_y)
         except:
             pass
@@ -1062,7 +1069,7 @@ class BackingWidget(ui_backing.Ui_Form, QWidget, Qt.QThread):
 
 
 # 后台压缩
-class ZipFiles(Qt.QThread):
+class ZipFiles(QtCore.QThread):
 
     # zip 文件列表
     zip_file_list:list = []
@@ -1071,10 +1078,10 @@ class ZipFiles(Qt.QThread):
     # 后缀
     zip_tmpfile_suffix:str = ""
     # 定义信号槽
-    zipping_signal = pyqtSignal(str)
-    ziprate_signal = pyqtSignal(int)
-    zipfinish_signal = pyqtSignal(list)
-    ziperr_signal = pyqtSignal(str)
+    zipping_signal = QtCore.Signal(str)
+    ziprate_signal = QtCore.Signal(int)
+    zipfinish_signal = QtCore.Signal(list)
+    ziperr_signal = QtCore.Signal(str)
 
 
     # 要打包的文件总大小MB
@@ -1223,17 +1230,17 @@ class ZipFiles(Qt.QThread):
         return zip_name
 
 # 后台文件复制
-class BackingUpFiles(Qt.QThread):
+class BackingUpFiles(QtCore.QThread):
 
     # 待复制文件列表
     to_copy_list:list = []
     # 复制成功文件列表
     copid_file_list:list = []
     # 定义信号槽
-    filename_signal = QtCore.pyqtSignal(str)
-    rate_signal = QtCore.pyqtSignal(int)
-    finish_signal = QtCore.pyqtSignal(list)
-    copy_err_signal = QtCore.pyqtSignal(str)
+    filename_signal = QtCore.Signal(str)
+    rate_signal = QtCore.Signal(int)
+    finish_signal = QtCore.Signal(list)
+    copy_err_signal = QtCore.Signal(str)
     # 所有文件总大小
     total_sizeMB:float = 0.1
     # 已经拷贝的文件累计大小
@@ -1412,8 +1419,8 @@ class FinishWidget(ui_finish.Ui_Form, QWidget):
         if event.button() == QtCore.Qt.LeftButton:
             try:
                 super(FinishWidget, self).mousePressEvent(event)
-                self.start_x = event.x()
-                self.start_y = event.y()
+                self.start_x = int(event.position().x())
+                self.start_y = int(event.position().y())
             except:
                 pass
 
@@ -1426,8 +1433,8 @@ class FinishWidget(ui_finish.Ui_Form, QWidget):
     def mouseMoveEvent(self, event):
         super(FinishWidget, self).mouseMoveEvent(event)
         try:
-            dis_x = event.x() - self.start_x
-            dis_y = event.y() - self.start_y
+            dis_x = int(event.position().x()) - self.start_x
+            dis_y = int(event.position().y()) - self.start_y
             self.move(self.x() + dis_x, self.y() + dis_y)
         except:
             pass
@@ -1514,7 +1521,7 @@ if __name__ == "__main__":
     # 全局变量
     SETTING = Setting()
     # 设置在windows超分辨率下窗口的正常显示
-    QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
+    # QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
     # 设置GUI主程序
     app = QApplication(sys.argv)
     # 定义窗口实例
@@ -1524,4 +1531,4 @@ if __name__ == "__main__":
     # 显示file_windows
     file_window.show_edit_list()
     # GUI主循环
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

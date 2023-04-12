@@ -4,8 +4,10 @@ import ctypes
 import pickle
 import shutil
 import time
-from PyQt5.Qt import QThread
-from PyQt5.QtCore import pyqtSignal
+from PySide6.QtCore import QThread, Signal
+# from PyQt5.Qt import QThread
+# from PyQt5.QtCore import pyqtSignal
+
 
 
 # c盘根目录临时文件夹名
@@ -110,8 +112,8 @@ def insufficient_space(dst_drive:str, needsizeMB:float) -> int:
 class File(QThread):
 
     # 定义信号槽
-    copied_signal = pyqtSignal(bool)
-    copy_err_signal = pyqtSignal(str)
+    copied_signal = Signal(bool)
+    copy_err_signal = Signal(str)
     # 参数由此变量传入
     args = ()
     # c盘根目录临时文件夹名
