@@ -20,7 +20,7 @@ I test it passed on Windows 10 and MacOS Bigsur.
 
 ## Release Note:
 Version 1.0.3
-- Migrate to the pyside6 graphics framework, it have smaller packaging size.
+- Migrate to the PySide6 GUI framework from PyQt5, it have smaller packaging size.
 
 Version 1.0.1  
 - Multi language support English and Simplified Chinese.  
